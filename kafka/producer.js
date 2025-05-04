@@ -1,40 +1,35 @@
 const { Kafka } = require('kafkajs');
 
 const kafka = new Kafka({
-    clientId: 'fake-producer',
+    clientId: 'sensor-app',
     brokers: ['localhost:9092']
 });
 
 const producer = kafka.producer();
 
-const run = async () => {
+const sendMessage = async () => {
     await producer.connect();
-    console.log("🚀 Producer connected");
-
-    let id = 1;
+    console.log("Producer connected");
 
     setInterval(async () => {
         const message = {
-            id,
-            name: `User${id}`,
-            timestamp: new Date().toISOString()
+            sensor_id: `sensor_${Math.floor(Math.random() * 10)}`,
+            temperature: parseFloat((Math.random() * 100).toFixed(2)),
+            humidity: parseFloat((Math.random() * 100).toFixed(2)),
+            timestamp: Date.now()
         };
 
         await producer.send({
-            topic: 'User',
+            topic: 'sensor-data',
             messages: [
                 {
-                    key: String(id),
-                    value: JSON.stringify(message),
-                    partition: id % 2 // send evenly to 2 partitions
+                    value: JSON.stringify(message)
                 }
             ]
         });
 
-        console.log(`✅ Sent message ${id}`);
-        id++;
-
-    }, 5000); // sends a message every second
+        console.log("Sent:", message);
+    }, 1000);
 };
 
-run().catch(console.error);
+sendMessage().catch(console.error);

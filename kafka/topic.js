@@ -1,35 +1,23 @@
+// topic.js
 const { Kafka } = require('kafkajs');
 
-async function run() {
-    const kafka = new Kafka({
-        clientId: 'my-app',
-        brokers: ['localhost:9092']
-    });
+const kafka = new Kafka({
+  clientId: 'topic-creator',
+  brokers: ['localhost:9092'],
+});
 
-    const admin = kafka.admin(); // ✅ moved out of try block
+const admin = kafka.admin();
 
-    try {
-        await admin.connect();
-        console.log('Connected to Kafka broker');
+const run = async () => {
+  await admin.connect();
+  console.log('Connected to Kafka broker');
 
-        // Create a new topic
-        await admin.createTopics({
-            topics: [
-                {
-                    topic: 'Products',
-                    numPartitions: 2,
-                    replicationFactor: 1
-                }
-            ]
-        });
+  await admin.createTopics({
+    topics: [{ topic: 'sensor-data', numPartitions: 1, replicationFactor: 1 }],
+  });
 
-        console.log('Topic created successfully');
-    } catch (error) {
-        console.error('Error creating Kafka topic:', error);
-    } finally {
-        console.log('Kafka instance created successfully');
-        await admin.disconnect();
-    }
-}
+  console.log('Topic "sensor-data" created');
+  await admin.disconnect();
+};
 
 run().catch(console.error);
