@@ -1,2 +1,9 @@
 */node_modules
-/venv
+/venv-py311-clean
+/important-info.txt
+*/__pycache__
+*/*.csv
+/spark/checkpoints/
+/spark/saved_models/
+*.delta.crc
+/.env
