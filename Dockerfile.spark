@@ -1,0 +1,10 @@
+FROM bitnami/spark:latest
+
+# Install Python dependencies
+USER root
+RUN pip install pyspark influxdb-client numpy pandas scipy
+
+# Switch back to default non-root user
+USER 1001
+
+WORKDIR /app
