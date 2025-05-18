@@ -1,0 +1,1 @@
+{"class":"org.apache.spark.ml.feature.VectorAssembler","timestamp":1747398472758,"sparkVersion":"3.5.5","uid":"VectorAssembler_b7ca91f7aa0f","paramMap":{"inputCols":["humidity","hour_of_day","day_of_week","temp_change_rate","avg_temp_last_5min"],"outputCol":"features"},"defaultParamMap":{"handleInvalid":"error","outputCol":"VectorAssembler_b7ca91f7aa0f__output"}}
