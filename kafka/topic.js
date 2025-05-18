@@ -3,7 +3,7 @@ const { Kafka } = require('kafkajs');
 
 const kafka = new Kafka({
   clientId: 'topic-creator',
-  brokers: ['localhost:9092'],
+  brokers: ['localhost:29092']
 });
 
 const admin = kafka.admin();

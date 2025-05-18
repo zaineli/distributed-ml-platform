@@ -1,8 +1,8 @@
 const { Kafka } = require('kafkajs');
 
 const kafka = new Kafka({
-    clientId: 'sensor-app',
-    brokers: ['localhost:9092']
+  clientId: 'my-app',
+  brokers: ['localhost:29092'] // Not 'kafka:9092', that's for internal Docker
 });
 
 const producer = kafka.producer();
