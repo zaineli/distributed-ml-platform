@@ -7,4 +7,3 @@
 /spark/saved_models/
 *.delta.crc
 /.env
-*.sh

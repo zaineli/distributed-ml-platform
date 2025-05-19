@@ -20,7 +20,12 @@ INFLUXDB_BUCKET = "ml-pipeline"
 # Create Spark Session
 spark = SparkSession.builder \
     .appName("KafkaSensorConsumer") \
-    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.2") \
+    .config("spark.jars.packages", "org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1,org.elasticsearch:elasticsearch-spark-30_2.12:8.13.2") \
+    .config("es.nodes", "elasticsearch") \
+    .config("es.port", "9200") \
+    .config("es.nodes.wan.only", "true") \
+    .config("es.net.ssl", "false") \
+    .config("es.nodes.discovery", "false") \
     .getOrCreate()
 
 spark.sparkContext.setLogLevel("WARN")
@@ -42,10 +47,14 @@ schema = StructType() \
 # Read from Kafka
 kafka_df = spark.readStream \
     .format("kafka") \
-    .option("kafka.bootstrap.servers", "localhost:9092") \
+    .option("kafka.bootstrap.servers", "kafka:9092") \
     .option("subscribe", "sensor-data") \
-    .option("failOnDataLoss", "false") \
     .load()
+
+kafka_df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)").writeStream \
+    .format("console") \
+    .start() \
+    .awaitTermination()
 
 # Parse and transform data
 raw_df = kafka_df.selectExpr("CAST(value AS STRING)") \
@@ -137,17 +146,34 @@ def write_batch_to_influx(df, epoch_id):
             write_api.close()
 
 # Start the streaming query with foreachBatch to write to InfluxDB
-# Change the output mode to "append" in your final writeStream
-query = output_df.writeStream \
-    .foreachBatch(write_batch_to_influx) \
+# query = output_df.writeStream \
+#     .foreachBatch(write_batch_to_influx) \
+#     .start()
+output_df.printSchema()
+output_df.writeStream \
     .outputMode("append") \
-    .option("checkpointLocation", "./checkpoints") \
-    .trigger(processingTime="10 seconds") \
+    .format("console") \
+    .option("truncate", False) \
     .start()
+    
+es_output_df = output_df.withColumn("timestamp", col("timestamp").cast("string"))
 
+es_query = es_output_df.writeStream \
+    .format("es") \
+    .option("checkpointLocation", "/tmp/spark-checkpoints") \
+    .option("es.resource", "sensor-index") \
+    .option("es.nodes", "elasticsearch") \
+    .option("es.port", "9200") \
+    .option("es.nodes.wan.only", "true") \
+    .option("es.net.ssl", "false") \
+    .outputMode("append") \
+    .start()
 try:
-    query.awaitTermination()
+    # query.awaitTermination()
+    output_df.awaitTermination()
+    es_query.awaitTermination()
 except KeyboardInterrupt:
-    logger.info("Stopping streaming query...")
-    query.stop()
+    logger.info("Stopping streaming queries...")
+    # query.stop()
+    es_query.stop()
     spark.stop()
