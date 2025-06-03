@@ -1,14 +1,14 @@
-FROM bitnami/spark:latest
+FROM bitnami/spark:3.4.1
+
+USER root
 
 # Install Python dependencies
-USER root
-RUN pip install --no-cache-dir pyspark influxdb-client numpy pandas scipy
+RUN pip install --no-cache-dir pyspark==3.4.1 pandas numpy scipy scikit-learn
 
-# Create checkpoint directory with proper permissions
-RUN mkdir -p /tmp/spark-checkpoints && \
-    chmod 777 /tmp/spark-checkpoints
+# Create checkpoint directory
+RUN mkdir -p /tmp/spark-checkpoints && chmod 777 /tmp/spark-checkpoints
 
-# Switch back to default non-root user
+# Switch back to non-root user
 USER 1001
 
 WORKDIR /app
